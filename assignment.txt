@@ -1,0 +1,293 @@
+create database student;
+
+use student
+/*creating a table*/
+create table employeeinfo(
+id int primary key,
+name varchar(30),
+gender varchar(20),
+departmentid int  
+);
+/*inserting values into the table*/
+insert into employeeinfo values(1,'sam','male',1);
+insert into employeeinfo values(2,'rama','male',3);
+insert into employeeinfo values(3,'sara','female',1);
+insert into employeeinfo values(4,'todd','male',2);
+insert into employeeinfo values(5,'john','male',3);
+insert into employeeinfo values(6,'sana','female',2);
+insert into employeeinfo values(7,'james','male',1);
+insert into employeeinfo values(8,'rob','male',2);
+insert into employeeinfo values(9,'steve','male',1);
+insert into employeeinfo values(10,'pam','female',2);
+
+select * from employeeinfo;
+
+/*creating a stored procedure*/
+create procedure spgetemployees
+as
+begin
+select name,gender from employeeinfo
+end
+
+/*executing a stored procedure*/
+exec spgetemployees;
+
+/*stored procedures with parameters acting as placeholders*/
+create procedure spgetemployeesbygenderanddepartment
+@gender nvarchar(20),
+@departmentid int
+as
+begin
+select name,gender,departmentid from employeeinfo where gender = @gender and departmentid = @departmentid
+end
+
+/*executing a stored procedure by passing in the parameters*/
+spgetemployeesbygenderanddepartment 'male',2
+
+/*to view the definition of stored procedures by mang use of system stored procedure*/
+sp_helptext spgetemployees
+
+create procedure spgetemployee
+as
+begin
+select name,gender from employeeinfo order by name
+end
+
+/*droping a stored procedure*/
+drop procedure spgetemployee
+
+/*altering a stored procedure and adding a encryption*/
+alter procedure spgetemployeesbygenderanddepartment
+@gender nvarchar(20),
+@departmentid int
+with encryption
+as
+begin
+select name,gender,departmentid from employeeinfo where gender = @gender and departmentid = @departmentid
+end
+
+create database people;
+use people;
+
+use student;
+
+create table movie(
+movieid int primary key,
+filmname varchar(30),
+filmreleasedate date,
+filmruntimeminutes time
+);
+
+alter table movie drop column filmruntimeminutes
+
+alter table movie add runtimeminutes int
+
+select * from movie;
+
+update movie set runtimeminutes = 120 where movieid = 101;
+update movie set runtimeminutes = 180 where movieid = 102;
+update movie set runtimeminutes = 150 where movieid = 103;
+update movie set runtimeminutes = 200 where movieid = 104;
+update movie set runtimeminutes = 220 where movieid = 105;
+
+
+
+insert into movie values(101,'monarch','12/10/1998','03:22:56');
+insert into movie values(102,'despicable me','02/20/1979','03:22:56');
+insert into movie values(103,'palpable','08/21/1966','03:22:56');
+insert into movie values(104,'cultimate','04/25/2000','03:22:56');
+insert into movie values(105,'sarcism','09/05/2005','03:22:56');
+
+alter table movie add filmoscarnominations int
+
+update movie set filmoscarnominations = 0 where movieid = 101;
+update movie set filmoscarnominations = 5 where movieid = 102;
+update movie set filmoscarnominations = 8 where movieid = 103;
+update movie set filmoscarnominations = 3 where movieid = 104;
+update movie set filmoscarnominations = 4 where movieid = 105;
+
+update movie set filmruntimeminutes = '02:26:32' where movieid = 102;
+update movie set filmruntimeminutes = '01:20:22' where movieid = 103;
+update movie set filmruntimeminutes = '02:35:44' where movieid = 104;
+update movie set filmruntimeminutes = '01:22:47' where movieid = 105;
+
+
+
+select * from movie;
+
+alter procedure spfilmcity
+as
+begin
+select filmname,filmreleasedate,runtimeminutes from movie order by filmname asc
+end
+
+execute spfilmcity
+
+alter proc spfilmcriteria(@minlength as int, @maxlength as int,@title as varchar(max))
+as
+begin
+select filmname,runtimeminutes from movie where 
+runtimeminutes >= @minlength and 
+runtimeminutes <= @maxlength and
+filmname like '%'+ @title +'%'
+
+order by runtimeminutes asc
+end
+
+execute spfilmcriteria @minlength=100,@maxlength=200,@title='arch'
+
+use student
+
+select * from movie;
+
+create table tblactors(
+actorid int primary key,
+actorname varchar(30)
+); 
+
+insert into tblactors values(1,'raja');
+insert into tblactors values(2,'aswin');
+insert into tblactors values(3,'lakshmanan');
+
+
+/*creating triggers on actor table*/
+create trigger trgactorschanged
+on tblactors
+after insert,update,delete
+as
+begin
+		print 'something happened to the actor table'
+end
+
+/*testing the triggers by making use of dml triggers like insert,update and delete comands*/
+insert into tblactors values(999,'test');
+update tblactors set actorid = 200 where actorname = 'aswin';
+delete from tblactors where actorid = 2;
+
+/*creating instead of triggers*/
+create trigger trgactorinserted
+on tblactors
+instead of insert
+as
+begin
+	raiserror ('no more actors can be inserted',16,1)
+end
+
+insert into tblactors values(999,'laskar');
+
+select * from tblactors where actorid = 999
+
+
+create table employee(
+id int primary key,
+name varchar(30),
+gender varchar(20),
+departmentid int
+);
+
+create table department(
+
+deptid int primary key,
+deptname varchar(30),
+foreign key(deptid) references employee(id)
+
+);
+
+
+insert into employee values(1,'john','male',3);
+insert into employee values(2,'mike','male',2);
+insert into employee values(3,'pam','male',1);
+insert into employee values(4,'todd','male',4);
+insert into employee values(5,'sara','female',1);
+insert into employee values(6,'ben','male',3);
+
+insert into department values(1,'IT');
+insert into department values(2,'payroll');
+insert into department values(3,'HR');
+insert into department values(4,'admin');
+
+
+select * from employee;
+select * from department;
+
+/*creating views on the table*/
+create view viewemployeedetails
+as
+select id,name,gender,deptname
+from employee join department
+on department.deptid = employee.departmentid
+
+select * from viewemployeedetails
+
+create table audittable(
+id int primary key,
+name varchar(30),
+salary bigint,
+gender varchar(20),
+departmentid int );
+
+insert into audittable values(1,'john',5000,'male',3);
+insert into audittable values(2,'mike',3400,'female',1);
+insert into audittable values(3,'pam',6000,'female',1);
+insert into audittable values(4,'todd',4800,'male',4);
+insert into audittable values(5,'sara',3200,'female',1);
+insert into audittable values(6,'ben',4800,'male',3);
+
+select * from audittable;
+
+create table tblemployeeaudit(
+id int primary key,
+auditdata varchar(100)
+);
+
+create trigger tr_tblemployee_afterinsert
+on audittable
+for insert
+as
+begin
+
+	declare @id int
+	select @id = id from inserted
+
+	insert into tblemployeeaudit values('new employee with id = ' + cast(@id as nvarchar(5)) + ' is added at' + cast(Getdate() as nvarchar(20)));
+
+
+end
+
+insert into employeeaudit values(7,'jimmy',1800,'female',3);
+ 
+
+ create trigger tr_tblemployee_afterdelete
+ on audittable
+ for delete
+ as
+ begin
+
+	declare @id = id int
+	select @id = id from deleted
+
+	insert into tblemployeeaudit values('new employee with id' + cast(@id as nvarchar(10)) + 'is added at' + cast(Getdate() as nvarchar(20)));
+end
+
+create table tr_tblemployee_afterupdate
+on sudittable
+for update
+as
+begin
+
+	select * from inserted;
+	select * from deleted;
+end
+
+update audittable set name = 'james', salary = 2000, gender = 'male' where id = 8;
+
+ 
+
+
+
+
+
+
+
+
+
